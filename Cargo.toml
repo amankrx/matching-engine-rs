@@ -1,0 +1,13 @@
+[package]
+name = "matching-engine-rs"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Aman Kumar <aman@amankrx.com>"]
+description = "Building a fast matching engine in Rust for efficient processing of an ITCH order book."
+readme = "README.md"
+homepage = "https://github.com/amankrx/matching-engine-rs"
+repository = "https://github.com/amankrx/matching-engine-rs"
+keywords = ["rust", "trading", "order-book", "matching-engine", "orderbook", "itch"]
+
+[dependencies]
