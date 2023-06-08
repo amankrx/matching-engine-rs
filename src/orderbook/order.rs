@@ -34,24 +34,6 @@ pub enum OrderType {
     Limit,
     Stop,
     StopLimit,
-    TrailingStop,
-    TrailingStopLimit,
-}
-
-/// # OrderTimeInForce
-/// ## Description
-/// OrderTimeInForce is an enum that represents the time in force of an order.
-/// ## Variants
-/// * GTC - Good Till Cancelled
-/// * IOC - Immediate or Cancel
-/// * FOK - Fill or Kill
-/// * AON - All or None
-#[derive(Debug)]
-pub enum OrderTimeInForce {
-    GTC,
-    IOC,
-    FOK,
-    AON,
 }
 
 /// # Order
@@ -63,16 +45,11 @@ pub struct Order {
     pub symbol_id: u32,
     pub side: OrderSide,
     pub order_type: OrderType,
-    pub time_in_force: OrderTimeInForce,
     pub price: Option<u64>,
     pub stop_price: Option<u64>,
     pub quantity: u64,
     pub filled_quantity: u64,
     pub remaining_quantity: u64,
-    pub max_show_quantity: Option<u64>,
-    pub slippage: Option<u64>,
-    pub trailing_distance: Option<i64>,
-    pub trailing_step: Option<i64>,
 }
 
 impl Order {
@@ -81,58 +58,36 @@ impl Order {
         symbol_id: u32,
         side: OrderSide,
         order_type: OrderType,
-        time_in_force: OrderTimeInForce,
         price: Option<u64>,
         stop_price: Option<u64>,
         quantity: u64,
         filled_quantity: u64,
         remaining_quantity: u64,
-        max_show_quantity: Option<u64>,
-        slippage: Option<u64>,
-        trailing_distance: Option<i64>,
-        trailing_step: Option<i64>,
     ) -> Order {
         Order {
             id,
             symbol_id,
             side,
             order_type,
-            time_in_force,
             price,
             stop_price,
             quantity,
             filled_quantity,
             remaining_quantity,
-            max_show_quantity,
-            slippage,
-            trailing_distance,
-            trailing_step,
         }
     }
 
-    pub fn market_order(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        quantity: u64,
-        time_in_force: OrderTimeInForce,
-        slippage: Option<u64>,
-    ) -> Order {
+    pub fn market_order(id: u64, symbol_id: u32, side: OrderSide, quantity: u64) -> Order {
         Order {
             id,
             symbol_id,
             side,
             order_type: OrderType::Market,
-            time_in_force,
             price: None,
             stop_price: None,
             quantity,
             filled_quantity: 0,
             remaining_quantity: quantity,
-            max_show_quantity: None,
-            slippage,
-            trailing_distance: None,
-            trailing_step: None,
         }
     }
 
@@ -142,23 +97,17 @@ impl Order {
         side: OrderSide,
         quantity: u64,
         price: u64,
-        time_in_force: OrderTimeInForce,
     ) -> Order {
         Order {
             id,
             symbol_id,
             side,
             order_type: OrderType::Limit,
-            time_in_force,
             price: Some(price),
             stop_price: None,
             quantity,
             filled_quantity: 0,
             remaining_quantity: quantity,
-            max_show_quantity: None,
-            slippage: None,
-            trailing_distance: None,
-            trailing_step: None,
         }
     }
 
@@ -168,24 +117,17 @@ impl Order {
         side: OrderSide,
         quantity: u64,
         stop_price: u64,
-        slippage: Option<u64>,
-        time_in_force: OrderTimeInForce,
     ) -> Order {
         Order {
             id,
             symbol_id,
             side,
             order_type: OrderType::Stop,
-            time_in_force,
             price: None,
             stop_price: Some(stop_price),
             quantity,
             filled_quantity: 0,
             remaining_quantity: quantity,
-            max_show_quantity: None,
-            slippage,
-            trailing_distance: None,
-            trailing_step: None,
         }
     }
 
@@ -196,78 +138,17 @@ impl Order {
         quantity: u64,
         price: u64,
         stop_price: u64,
-        time_in_force: OrderTimeInForce,
     ) -> Order {
         Order {
             id,
             symbol_id,
             side,
             order_type: OrderType::StopLimit,
-            time_in_force,
             price: Some(price),
             stop_price: Some(stop_price),
             quantity,
             filled_quantity: 0,
             remaining_quantity: quantity,
-            max_show_quantity: None,
-            slippage: None,
-            trailing_distance: None,
-            trailing_step: None,
-        }
-    }
-
-    pub fn trailing_stop_order(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        quantity: u64,
-        trailing_distance: i64,
-        trailing_step: i64,
-        time_in_force: OrderTimeInForce,
-    ) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type: OrderType::TrailingStop,
-            time_in_force,
-            price: None,
-            stop_price: None,
-            quantity,
-            filled_quantity: 0,
-            remaining_quantity: quantity,
-            max_show_quantity: None,
-            slippage: None,
-            trailing_distance: Some(trailing_distance),
-            trailing_step: Some(trailing_step),
-        }
-    }
-
-    pub fn trailing_stop_limit_order(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        quantity: u64,
-        price: u64,
-        trailing_distance: i64,
-        trailing_step: i64,
-        time_in_force: OrderTimeInForce,
-    ) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type: OrderType::TrailingStopLimit,
-            time_in_force,
-            price: Some(price),
-            stop_price: None,
-            quantity,
-            filled_quantity: 0,
-            remaining_quantity: quantity,
-            max_show_quantity: None,
-            slippage: None,
-            trailing_distance: Some(trailing_distance),
-            trailing_step: Some(trailing_step),
         }
     }
 
@@ -295,30 +176,6 @@ impl Order {
         matches!(self.order_type, OrderType::StopLimit)
     }
 
-    pub fn is_trailing_stop(&self) -> bool {
-        matches!(self.order_type, OrderType::TrailingStop)
-    }
-
-    pub fn is_trailing_stop_limit(&self) -> bool {
-        matches!(self.order_type, OrderType::TrailingStopLimit)
-    }
-
-    pub fn is_gtc(&self) -> bool {
-        matches!(self.time_in_force, OrderTimeInForce::GTC)
-    }
-
-    pub fn is_ioc(&self) -> bool {
-        matches!(self.time_in_force, OrderTimeInForce::IOC)
-    }
-
-    pub fn is_fok(&self) -> bool {
-        matches!(self.time_in_force, OrderTimeInForce::FOK)
-    }
-
-    pub fn is_aon(&self) -> bool {
-        matches!(self.time_in_force, OrderTimeInForce::AON)
-    }
-
     pub fn is_filled(&self) -> bool {
         self.remaining_quantity == 0
     }
@@ -331,25 +188,7 @@ impl Order {
         self.remaining_quantity > 0
     }
 
-    pub fn is_hidden(&self) -> bool {
-        self.max_show_quantity.is_some() && self.max_show_quantity.unwrap() > 0
-    }
-
-    pub fn is_iceberg(&self) -> bool {
-        self.max_show_quantity.is_some() && self.max_show_quantity.unwrap() < self.quantity
-    }
-
-    pub fn is_slippage(&self) -> bool {
-        self.slippage.is_some()
-    }
-
     fn validate_market_order(&self) -> Result<(), ErrorCode> {
-        if !(self.is_ioc() || self.is_fok()) {
-            return Err(ErrorCode::InvalidOrderTimeInForce(
-                "Market orders must be IOC or FOK",
-            ));
-        }
-
         if self.price.is_some() {
             return Err(ErrorCode::InvalidOrderParameters(
                 "Market orders must not have a price",
@@ -362,21 +201,10 @@ impl Order {
             ));
         }
 
-        if self.is_iceberg() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Market orders must not be iceberg orders",
-            ));
-        }
-
         Ok(())
     }
 
     fn validate_limit_order(&self) -> Result<(), ErrorCode> {
-        if self.is_slippage() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Limit orders must not have slippage",
-            ));
-        }
         if self.price.is_none() {
             return Err(ErrorCode::InvalidOrderParameters(
                 "Limit orders must have a price",
@@ -387,22 +215,11 @@ impl Order {
                 "Limit orders must not have a stop price",
             ));
         }
-        assert!(!self.is_iceberg(),);
-        if self.is_iceberg() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Limit orders must not be iceberg orders",
-            ));
-        }
 
         Ok(())
     }
 
     fn validate_stop_order(&self) -> Result<(), ErrorCode> {
-        if self.is_aon() {
-            return Err(ErrorCode::InvalidOrderTimeInForce(
-                "Stop orders must not be All or None orders",
-            ));
-        }
         if self.price.is_some() {
             return Err(ErrorCode::InvalidOrderParameters(
                 "Stop orders must not have a price",
@@ -413,21 +230,11 @@ impl Order {
                 "Stop orders must have a stop price",
             ));
         }
-        if self.is_iceberg() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Stop orders must not be iceberg orders",
-            ));
-        }
 
         Ok(())
     }
 
     fn validate_stop_limit_order(&self) -> Result<(), ErrorCode> {
-        if self.is_slippage() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Stop Limit orders must not have slippage",
-            ));
-        }
         if self.price.is_none() {
             return Err(ErrorCode::InvalidOrderParameters(
                 "Stop Limit orders must have a price",
@@ -437,43 +244,6 @@ impl Order {
             return Err(ErrorCode::InvalidOrderParameters(
                 "Stop Limit orders must have a stop price",
             ));
-        }
-
-        Ok(())
-    }
-
-    fn validate_trailing_orders(&self) -> Result<(), ErrorCode> {
-        if self.trailing_distance.is_none() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Trailing stop orders must have a trailing distance",
-            ));
-        }
-
-        let trailing_distance = self.trailing_distance.unwrap();
-
-        if trailing_distance == 0 {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Trailing stop orders must have a non-zero trailing distance",
-            ));
-        }
-
-        if trailing_distance > 0 {
-            if self.trailing_step.is_none()
-                || (self.trailing_step.unwrap() < 0)
-                || (self.trailing_step.unwrap() >= trailing_distance)
-            {
-                return Err(ErrorCode::InvalidOrderParameters("Trailing stop orders with positive trailing distance must have a non-negative trailing step less than the trailing distance"));
-            }
-        } else {
-            if self.trailing_distance.unwrap() < -1000 {
-                return Err(ErrorCode::InvalidOrderParameters("Trailing stop orders with negative trailing distance must be in the range [0.01, 100%] (from -1 down to -10000)"));
-            }
-            if self.trailing_step.is_none()
-                || (self.trailing_step.unwrap() > 0)
-                || (self.trailing_step.unwrap() <= trailing_distance)
-            {
-                return Err(ErrorCode::InvalidOrderParameters("Trailing stop orders with negative trailing distance must have a non-positive trailing step greater than the trailing distance"));
-            }
         }
 
         Ok(())
@@ -513,18 +283,13 @@ impl Order {
         }
 
         // Validate Stop Order
-        if self.is_stop() || self.is_trailing_stop() {
+        if self.is_stop() {
             return self.validate_stop_order();
         }
 
         // Validate Stop Limit Order
-        if self.is_stop_limit() || self.is_trailing_stop_limit() {
+        if self.is_stop_limit() {
             return self.validate_stop_limit_order();
-        }
-
-        // Validate Trailing Stop Order
-        if self.is_trailing_stop() || self.is_trailing_stop_limit() {
-            return self.validate_trailing_orders();
         }
 
         Ok(())

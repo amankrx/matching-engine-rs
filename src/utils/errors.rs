@@ -15,7 +15,6 @@ pub enum ErrorCode {
     OrderBookNotFound(&'static str),
     InvalidOrderType(&'static str),
     InvalidOrderSide(&'static str),
-    InvalidOrderTimeInForce(&'static str),
     InvalidOrderPrice(&'static str),
     InvalidOrderQuantity(&'static str),
     InvalidOrderId(&'static str),
@@ -35,9 +34,6 @@ impl std::fmt::Display for ErrorCode {
             ErrorCode::OrderBookNotFound(msg) => write!(f, "OrderBook Not Found Error: {}", msg),
             ErrorCode::InvalidOrderType(msg) => write!(f, "Invalid Order Type Error: {}", msg),
             ErrorCode::InvalidOrderSide(msg) => write!(f, "Invalid Order Side Error: {}", msg),
-            ErrorCode::InvalidOrderTimeInForce(msg) => {
-                write!(f, "Invalid Order Time In Force Error: {}", msg)
-            }
             ErrorCode::InvalidOrderPrice(msg) => write!(f, "Invalid Order Price Error: {}", msg),
             ErrorCode::InvalidOrderQuantity(msg) => {
                 write!(f, "Invalid Order Quantity Error: {}", msg)
