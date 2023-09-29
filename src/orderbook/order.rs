@@ -1,297 +1,219 @@
-// orderbook/order.rs
-//  * Author: Aman Kumar <aman@amankrx.com>
-//  * Created: Wed Jun 07 2023
-//  * Last Modified: Wed Jun 07 2023
-//  * Description: Orderbook Order
-//  * License: Distributed under the terms of the MIT License
+// order.rs
 
-use crate::utils::errors::ErrorCode;
-/// # OrderSide
-/// ## Description
-/// OrderSide is an enum that represents the side of an order.
-/// ## Variants
-/// * Bid - Buy side of the order represents the highest price that a buyer is willing to pay for a security.
-/// * Ask - Sell side of the order represents the lowest price that a seller is willing to accept for a security.
-#[derive(Debug)]
-pub enum OrderSide {
-    Bid,
-    Ask,
+use crate::orderbook::level::LevelId;
+use crate::orderbook::quantity::Qty;
+use crate::orderbook::utils::BookId;
+use std::fmt::Debug;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct OrderId(pub u32);
+
+impl Default for OrderId {
+    fn default() -> Self {
+        Self(0)
+    }
 }
 
-/// # OrderType
-/// ## Description
-/// OrderType is an enum that represents the type of an order.
-/// ## Variants
-/// * Market - A market order is a buy or sell order to be executed immediately at the current market prices.
-/// * Limit - A limit order is an order to buy or sell a stock at a specific price or better.
-/// * Stop - A stop order, also referred to as a stop-loss order, is an order to buy or sell a stock once the price of the stock reaches a specified price, known as the stop price.
-/// * StopLimit - A stop-limit order is an order to buy or sell a stock that combines the features of a stop order and a limit order.
-/// * TrailingStop - A trailing stop is a stop order that can be set at a defined percentage or dollar amount away from a security's current market price.
-/// * TrailingStopLimit - A trailing stop limit order is designed to allow an investor to specify a limit on the maximum possible loss, without setting a limit on the maximum possible gain.
-#[derive(Debug)]
-pub enum OrderType {
-    Market,
-    Limit,
-    Stop,
-    StopLimit,
-}
-
-/// # Order
-/// ## Description
-/// Order is a struct that represents an order.
-#[derive(Debug)]
+#[derive(Default, Clone)]
 pub struct Order {
-    pub id: u64,
-    pub symbol_id: u32,
-    pub side: OrderSide,
-    pub order_type: OrderType,
-    pub price: Option<u64>,
-    pub stop_price: Option<u64>,
-    pub quantity: u64,
-    pub filled_quantity: u64,
-    pub remaining_quantity: u64,
+    pub level_id: LevelId,
+    pub book_id: BookId,
+    pub qty: Qty,
+}
+
+impl Debug for Order {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Order")
+            .field("level_id", &self.level_id)
+            .field("book_id", &self.book_id)
+            .field("qty", &self.qty)
+            .finish()
+    }
+}
+
+impl PartialEq for Order {
+    fn eq(&self, other: &Self) -> bool {
+        self.level_id == other.level_id && self.book_id == other.book_id && self.qty == other.qty
+    }
+}
+
+impl AsRef<Order> for Order {
+    fn as_ref(&self) -> &Order {
+        self
+    }
 }
 
 impl Order {
-    pub fn new(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        order_type: OrderType,
-        price: Option<u64>,
-        stop_price: Option<u64>,
-        quantity: u64,
-        filled_quantity: u64,
-        remaining_quantity: u64,
-    ) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type,
-            price,
-            stop_price,
-            quantity,
-            filled_quantity,
-            remaining_quantity,
+    pub fn new(qty: Qty, level_id: LevelId, book_id: BookId) -> Self {
+        Self {
+            level_id,
+            book_id,
+            qty,
         }
     }
 
-    pub fn market_order(id: u64, symbol_id: u32, side: OrderSide, quantity: u64) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type: OrderType::Market,
-            price: None,
-            stop_price: None,
-            quantity,
-            filled_quantity: 0,
-            remaining_quantity: quantity,
+    pub fn replace(&mut self, order: Order) {
+        self.level_id = order.level_id;
+        self.book_id = order.book_id;
+        self.qty = order.qty;
+    }
+
+    pub fn set_level_id(&mut self, level_id: LevelId) {
+        self.level_id = level_id;
+    }
+}
+
+pub struct OidMap {
+    data: Vec<Option<Order>>,
+}
+
+impl OidMap {
+    pub fn new() -> Self {
+        OidMap {
+            data: vec![None; 1 << 20], // Use a fixed-size array
         }
     }
 
-    pub fn limit_order(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        quantity: u64,
-        price: u64,
-    ) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type: OrderType::Limit,
-            price: Some(price),
-            stop_price: None,
-            quantity,
-            filled_quantity: 0,
-            remaining_quantity: quantity,
+    pub fn reserve(&mut self, oid: OrderId) {
+        let idx = oid.0 as usize;
+        if idx >= self.data.len() {
+            self.data.resize(idx + 1, None);
         }
     }
 
-    pub fn stop_order(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        quantity: u64,
-        stop_price: u64,
-    ) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type: OrderType::Stop,
-            price: None,
-            stop_price: Some(stop_price),
-            quantity,
-            filled_quantity: 0,
-            remaining_quantity: quantity,
+    pub fn insert(&mut self, oid: OrderId, value: &Order) {
+        let idx = oid.0 as usize;
+        if idx >= self.data.len() {
+            self.data.resize(idx + 1, None);
+        }
+        self.data[idx] = Some(value.clone()); // Clone only when necessary
+    }
+
+    pub fn remove(&mut self, oid: OrderId) {
+        let idx = oid.0 as usize;
+        if idx < self.data.len() {
+            self.data[idx] = None;
         }
     }
 
-    pub fn stop_limit_order(
-        id: u64,
-        symbol_id: u32,
-        side: OrderSide,
-        quantity: u64,
-        price: u64,
-        stop_price: u64,
-    ) -> Order {
-        Order {
-            id,
-            symbol_id,
-            side,
-            order_type: OrderType::StopLimit,
-            price: Some(price),
-            stop_price: Some(stop_price),
-            quantity,
-            filled_quantity: 0,
-            remaining_quantity: quantity,
+    pub fn update_qty(&mut self, oid: OrderId, qty: Qty) {
+        let idx = oid.0 as usize;
+        if idx < self.data.len() {
+            if let Some(order) = &mut self.data[idx] {
+                if order.qty == qty {
+                    self.data[idx] = None;
+                } else {
+                    order.qty -= qty;
+                }
+            }
         }
     }
 
-    pub fn is_buy(&self) -> bool {
-        matches!(self.side, OrderSide::Bid)
+    pub fn get(&self, oid: OrderId) -> Option<&Order> {
+        let idx = oid.0 as usize;
+        self.data.get(idx)?.as_ref()
     }
 
-    pub fn is_sell(&self) -> bool {
-        matches!(self.side, OrderSide::Ask)
+    pub fn get_mut(&mut self, oid: OrderId) -> Option<&mut Order> {
+        let idx = oid.0 as usize;
+        self.data.get_mut(idx)?.as_mut()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_order_creation() {
+        let qty = Qty(100);
+        let level_id = LevelId(1);
+        let book_id = BookId(42);
+
+        let order = Order::new(qty, level_id, book_id);
+
+        assert_eq!(order.qty, qty);
+        assert_eq!(order.level_id, level_id);
+        assert_eq!(order.book_id, book_id);
     }
 
-    pub fn is_market(&self) -> bool {
-        matches!(self.order_type, OrderType::Market)
+    #[test]
+    fn test_order_replace() {
+        let qty1 = Qty(100);
+        let qty2 = Qty(200);
+        let level_id1 = LevelId(1);
+        let level_id2 = LevelId(2);
+        let book_id1 = BookId(42);
+        let book_id2 = BookId(43);
+
+        let mut order = Order::new(qty1, level_id1, book_id1);
+        let new_order = Order::new(qty2, level_id2, book_id2);
+
+        order.replace(new_order);
+
+        assert_eq!(order.qty, qty2);
+        assert_eq!(order.level_id, level_id2);
+        assert_eq!(order.book_id, book_id2);
     }
 
-    pub fn is_limit(&self) -> bool {
-        matches!(self.order_type, OrderType::Limit)
+    #[test]
+    fn test_order_set_level_id() {
+        let qty = Qty(100);
+        let level_id1 = LevelId(1);
+        let level_id2 = LevelId(2);
+        let book_id = BookId(42);
+
+        let mut order = Order::new(qty, level_id1, book_id);
+
+        order.set_level_id(level_id2);
+
+        assert_eq!(order.level_id, level_id2);
     }
 
-    pub fn is_stop(&self) -> bool {
-        matches!(self.order_type, OrderType::Stop)
+    #[test]
+    fn test_oid_map_insert_and_get() {
+        let mut oid_map = OidMap::new();
+        let oid = OrderId(0);
+        let qty = Qty(100);
+        let level_id = LevelId(1);
+        let book_id = BookId(42);
+        let order = Order::new(qty, level_id, book_id);
+
+        oid_map.insert(oid, &order);
+        let retrieved_order = oid_map.get(oid);
+
+        assert_eq!(retrieved_order, Some(&order));
     }
 
-    pub fn is_stop_limit(&self) -> bool {
-        matches!(self.order_type, OrderType::StopLimit)
+    #[test]
+    fn test_oid_map_reserve() {
+        let mut oid_map = OidMap::new();
+        let oid = OrderId(1000);
+        let qty = Qty(100);
+        let level_id = LevelId(1);
+        let book_id = BookId(42);
+        let order = Order::new(qty, level_id, book_id);
+
+        oid_map.reserve(oid);
+        oid_map.insert(oid, &order);
+        let retrieved_order = oid_map.get(oid);
+
+        assert_eq!(retrieved_order, Some(&order));
     }
 
-    pub fn is_filled(&self) -> bool {
-        self.remaining_quantity == 0
-    }
+    #[test]
+    fn test_oid_map_remove() {
+        let mut oid_map = OidMap::new();
+        let oid = OrderId(0);
+        let qty = Qty(100);
+        let level_id = LevelId(1);
+        let book_id = BookId(42);
+        let order = Order::new(qty, level_id, book_id);
 
-    pub fn is_partially_filled(&self) -> bool {
-        self.remaining_quantity > 0 && self.filled_quantity > 0
-    }
+        oid_map.insert(oid, &order);
+        oid_map.remove(oid);
+        let retrieved_order = oid_map.get(oid);
 
-    pub fn is_active(&self) -> bool {
-        self.remaining_quantity > 0
-    }
-
-    fn validate_market_order(&self) -> Result<(), ErrorCode> {
-        if self.price.is_some() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Market orders must not have a price",
-            ));
-        }
-
-        if self.stop_price.is_some() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Market orders must not have a stop price",
-            ));
-        }
-
-        Ok(())
-    }
-
-    fn validate_limit_order(&self) -> Result<(), ErrorCode> {
-        if self.price.is_none() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Limit orders must have a price",
-            ));
-        }
-        if self.stop_price.is_some() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Limit orders must not have a stop price",
-            ));
-        }
-
-        Ok(())
-    }
-
-    fn validate_stop_order(&self) -> Result<(), ErrorCode> {
-        if self.price.is_some() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Stop orders must not have a price",
-            ));
-        }
-        if self.stop_price.is_none() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Stop orders must have a stop price",
-            ));
-        }
-
-        Ok(())
-    }
-
-    fn validate_stop_limit_order(&self) -> Result<(), ErrorCode> {
-        if self.price.is_none() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Stop Limit orders must have a price",
-            ));
-        }
-        if self.stop_price.is_none() {
-            return Err(ErrorCode::InvalidOrderParameters(
-                "Stop Limit orders must have a stop price",
-            ));
-        }
-
-        Ok(())
-    }
-
-    pub fn validate(&self) -> Result<(), ErrorCode> {
-        // Validate Order ID
-        if self.id == 0 {
-            return Err(ErrorCode::InvalidOrderId("Order ID must be greater than 0"));
-        }
-
-        // Validate Order Quantity
-        if self.quantity < self.remaining_quantity {
-            return Err(ErrorCode::InvalidOrderQuantity(
-                "Order quantity must be greater than or equal to remaining quantity",
-            ));
-        }
-        if self.quantity == 0 {
-            return Err(ErrorCode::InvalidOrderQuantity(
-                "Order quantity must be greater than 0",
-            ));
-        }
-        if self.remaining_quantity == 0 {
-            return Err(ErrorCode::InvalidOrderQuantity(
-                "Order remaining quantity must be greater than 0",
-            ));
-        }
-
-        // Validate Market Order
-        if self.is_market() {
-            return self.validate_market_order();
-        }
-
-        // Validate Limit Order
-        if self.is_limit() {
-            return self.validate_limit_order();
-        }
-
-        // Validate Stop Order
-        if self.is_stop() {
-            return self.validate_stop_order();
-        }
-
-        // Validate Stop Limit Order
-        if self.is_stop_limit() {
-            return self.validate_stop_limit_order();
-        }
-
-        Ok(())
+        assert_eq!(retrieved_order, None);
     }
 }

@@ -1,65 +1,98 @@
-// orderbook/level.rs
-//  * Author: Aman Kumar <aman@amankrx.com>
-//  * Created: Wed Jun 07 2023
-//  * Last Modified: Wed Jun 07 2023
-//  * Description: Orderbook Level
-//  * License: Distributed under the terms of the MIT License
+// level.rs
 
+use crate::orderbook::{price::Price, quantity::Qty, utils::Ptr};
 use std::cmp::Ordering;
+use std::fmt::Debug;
 
-use crate::orderbook::order::{Order, OrderSide};
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LevelId(pub u32);
+
+impl Default for LevelId {
+    fn default() -> Self {
+        Self(0)
+    }
+}
 
 pub struct Level {
-    pub price: u64,
-    pub side: OrderSide,
-    pub orders: u64,
-    pub total_volume: u64,
+    pub price: Price,
+    pub size: Qty,
+}
+
+impl Default for Level {
+    fn default() -> Self {
+        Self {
+            price: Price(0),
+            size: Qty(0),
+        }
+    }
 }
 
 impl Level {
-    pub fn new(price: u64, side: OrderSide) -> Level {
-        Level {
-            price,
-            side,
-            orders: 0,
-            total_volume: 0,
+    pub fn new(price: Price, size: Qty) -> Self {
+        Self { price, size }
+    }
+}
+
+#[derive(Eq, PartialEq, Clone)]
+pub struct PriceLevel {
+    pub price: Price,
+    pub level_idx: Ptr,
+}
+
+impl Default for PriceLevel {
+    fn default() -> Self {
+        Self {
+            price: Price(0),
+            level_idx: Ptr(0),
         }
     }
+}
 
-    pub fn is_empty(&self) -> bool {
-        self.orders == 0
-    }
-
-    pub fn is_bid(&self) -> bool {
-        matches!(self.side, OrderSide::Bid)
-    }
-
-    pub fn is_ask(&self) -> bool {
-        matches!(self.side, OrderSide::Ask)
+impl Debug for PriceLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PriceLevel")
+            .field("price", &self.price)
+            .field("level_idx", &self.level_idx)
+            .finish()
     }
 }
 
-impl PartialEq for Level {
-    fn eq(&self, other: &Self) -> bool {
-        self.price == other.price
+impl PriceLevel {
+    pub(crate) fn new(price: Price, level_idx: Ptr) -> Self {
+        Self { price, level_idx }
     }
 }
 
-impl Eq for Level {}
-
-impl PartialOrd for Level {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.price.partial_cmp(&other.price)
-    }
-}
-
-impl Ord for Level {
+impl Ord for PriceLevel {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.price.cmp(&other.price)
+        self.price.0.cmp(&other.price.0)
     }
 }
 
-pub struct LevelNode {
-    pub level: Level,
-    pub orders: Vec<Order>,
+impl PartialOrd for PriceLevel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(Default)]
+pub struct SortedLevels(pub Vec<PriceLevel>);
+
+impl SortedLevels {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn insert(&mut self, idx: usize, px: PriceLevel) {
+        self.0.insert(idx, px);
+    }
+
+    pub fn remove(&mut self, price: Price) {
+        self.0.retain(|px| px.price != price);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 }
