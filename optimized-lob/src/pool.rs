@@ -1,43 +1,43 @@
 // pool.rs
 
-use crate::orderbook::utils::Ptr;
+use crate::level::{Level, LevelId};
 
 #[derive(Default)]
-pub struct Pool<T> {
-    pub allocated: Vec<T>,
-    pub free: Vec<Ptr>,
+pub struct LevelPool {
+    pub allocated: Vec<Level>,
+    pub free: Vec<LevelId>,
 }
 
-impl<T: Default> Pool<T> {
+impl LevelPool {
     pub fn new() -> Self {
-        Pool {
+        Self {
             allocated: Vec::new(),
             free: Vec::new(),
         }
     }
 
     pub fn new_with_capacity(size: usize) -> Self {
-        Pool {
+        Self {
             allocated: Vec::with_capacity(size),
             free: Vec::new(),
         }
     }
 
-    pub fn alloc(&mut self) -> Ptr {
+    pub fn alloc(&mut self) -> LevelId {
         if let Some(idx) = self.free.pop() {
             idx
         } else {
-            let idx = Ptr(self.allocated.len() as u32);
-            self.allocated.push(T::default());
+            let idx = LevelId(self.allocated.len() as u32);
+            self.allocated.push(Level::default());
             idx
         }
     }
 
-    pub fn free(&mut self, idx: Ptr) {
+    pub fn free(&mut self, idx: LevelId) {
         self.free.push(idx);
     }
 
-    pub fn get(&self, idx: Ptr) -> Option<&T> {
+    pub fn get(&self, idx: LevelId) -> Option<&Level> {
         let idx = idx.0 as usize;
         if idx < self.allocated.len() {
             Some(&self.allocated[idx])
@@ -46,7 +46,7 @@ impl<T: Default> Pool<T> {
         }
     }
 
-    pub fn get_mut(&mut self, idx: Ptr) -> Option<&mut T> {
+    pub fn get_mut(&mut self, idx: LevelId) -> Option<&mut Level> {
         let idx = idx.0 as usize;
         if idx < self.allocated.len() {
             Some(&mut self.allocated[idx])
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_pool_alloc_free() {
-        let mut pool: Pool<i32> = Pool::new_with_capacity(100);
+        let mut pool: LevelPool = LevelPool::new();
 
         let ptr1 = pool.alloc();
         let ptr2 = pool.alloc();

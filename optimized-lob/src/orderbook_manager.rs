@@ -1,23 +1,17 @@
 // orderbook_manager.rs
 
-use crate::orderbook::order::Order;
-use crate::orderbook::{
-    level::{Level, LevelId},
-    order::{OidMap, OrderId},
+use crate::{
+    level::LevelId,
+    order::{OidMap, OrderId, Order},
     orderbook::OrderBook,
-    pool::Pool,
     price::Price,
     quantity::Qty,
-    utils::*,
+    utils::BookId,
 };
 use std::collections::HashMap;
 
-const MAX_BOOKS: usize = 1 << 14;
-const MAX_LEVELS: usize = 1 << 20;
-
-struct OrderBookManager {
+pub struct OrderBookManager {
     books: HashMap<BookId, OrderBook>,
-    levels: Pool<Level>,
     oid_map: OidMap,
 }
 
@@ -25,7 +19,6 @@ impl OrderBookManager {
     pub fn new() -> Self {
         Self {
             books: HashMap::new(),
-            levels: Pool::new_with_capacity(MAX_LEVELS),
             oid_map: OidMap::new(),
         }
     }
@@ -39,7 +32,7 @@ impl OrderBookManager {
         self.books
             .entry(book_id)
             .or_insert_with(OrderBook::new)
-            .add_order(&mut order, price, qty, &mut self.levels);
+            .add_order(&mut order, price, qty);
 
         self.oid_map.insert(order_id, &order);
     }
@@ -50,7 +43,7 @@ impl OrderBookManager {
             self.books
                 .get_mut(&order.book_id)
                 .unwrap()
-                .remove_order(&mut order, &mut self.levels);
+                .remove_order(&mut order);
         }
         self.oid_map.remove(order_id);
     }
@@ -58,11 +51,10 @@ impl OrderBookManager {
     pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) {
         let order = self.oid_map.get_mut(order_id);
         if let Some(mut order) = order {
-            self.books.get_mut(&order.book_id).unwrap().reduce_order(
-                &mut order,
-                qty,
-                &mut self.levels,
-            );
+            self.books
+                .get_mut(&order.book_id)
+                .unwrap()
+                .reduce_order(&mut order, qty);
         }
         self.oid_map.update_qty(order_id, qty);
     }
@@ -91,7 +83,6 @@ impl OrderBookManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::orderbook::utils::BookId;
 
     #[test]
     fn test_add_order() {
@@ -166,7 +157,7 @@ mod tests {
         for i in 0..10_000_000 {
             orderbook_manager.add_order(
                 OrderId(i),
-                BookId(0),
+                BookId((i % 50) as u16),
                 Qty(100),
                 Price((100 * (i % 20)) as i32),
             );

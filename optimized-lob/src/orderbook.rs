@@ -1,18 +1,18 @@
 // orderbook.rs
 
-use crate::orderbook::level::PriceLevel;
-use crate::orderbook::quantity::Qty;
-use crate::orderbook::{
-    level::{Level, LevelId, SortedLevels},
+use crate::{
+    level::{Level, LevelId, SortedLevels, PriceLevel},
     order::Order,
-    pool::Pool,
+    pool::LevelPool,
     price::Price,
-    utils::*,
+    quantity::Qty,
+    utils::MAX_LEVELS,
 };
 
 pub struct OrderBook {
     pub bids: SortedLevels,
     pub asks: SortedLevels,
+    pub level_pool: LevelPool,
 }
 
 impl OrderBook {
@@ -20,16 +20,11 @@ impl OrderBook {
         Self {
             bids: SortedLevels::new(),
             asks: SortedLevels::new(),
+            level_pool: LevelPool::new_with_capacity(MAX_LEVELS),
         }
     }
 
-    pub fn add_order(
-        &mut self,
-        order: &mut Order,
-        price: Price,
-        qty: Qty,
-        level_pool: &mut Pool<Level>,
-    ) {
+    pub fn add_order(&mut self, order: &mut Order, price: Price, qty: Qty) {
         let levels = if price.is_bid() {
             &mut self.bids
         } else {
@@ -54,34 +49,34 @@ impl OrderBook {
         }
 
         if !found_insertion_point {
-            let level_ptr = level_pool.alloc();
+            let level_ptr = self.level_pool.alloc();
             order.level_id = LevelId(level_ptr.0);
             let level = Level::new(price, Qty(0));
-            level_pool.allocated[level_ptr.0 as usize] = level;
+            self.level_pool.allocated[level_ptr.0 as usize] = level;
             let px = PriceLevel::new(price, level_ptr);
             levels.insert(insertion_point, px);
         }
-        level_pool.allocated[order.level_id.0 as usize].size += qty;
+        self.level_pool.allocated[order.level_id.0 as usize].size += qty;
     }
 
-    pub fn reduce_order(&mut self, order: &mut Order, qty: Qty, level_pool: &mut Pool<Level>) {
-        level_pool.allocated[order.level_id.0 as usize].size -= qty;
+    pub fn reduce_order(&mut self, order: &mut Order, qty: Qty) {
+        self.level_pool.allocated[order.level_id.0 as usize].size -= qty;
     }
 
-    pub fn remove_order(&mut self, order: &mut Order, level_pool: &mut Pool<Level>) {
+    pub fn remove_order(&mut self, order: &mut Order) {
         let order_level_id = order.level_id.0 as usize;
 
-        level_pool.allocated[order_level_id].size -= order.qty;
+        self.level_pool.allocated[order_level_id].size -= order.qty;
 
-        if level_pool.allocated[order_level_id].size.is_empty() {
-            let level_price = level_pool.allocated[order_level_id].price;
+        if self.level_pool.allocated[order_level_id].size.is_empty() {
+            let level_price = self.level_pool.allocated[order_level_id].price;
             let levels = if level_price.is_bid() {
                 &mut self.bids
             } else {
                 &mut self.asks
             };
             levels.remove(level_price);
-            level_pool.free(Ptr(order.level_id.0));
+            self.level_pool.free(LevelId(order.level_id.0));
         }
     }
 }

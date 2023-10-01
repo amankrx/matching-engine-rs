@@ -1,9 +1,12 @@
 // order.rs
 
-use crate::orderbook::level::LevelId;
-use crate::orderbook::quantity::Qty;
-use crate::orderbook::utils::BookId;
+use crate::{
+    level::LevelId,
+    quantity::Qty,
+    utils::{BookId, INITIAL_ORDER_COUNT},
+};
 use std::fmt::Debug;
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrderId(pub u32);
@@ -70,7 +73,7 @@ pub struct OidMap {
 impl OidMap {
     pub fn new() -> Self {
         OidMap {
-            data: vec![None; 1 << 20], // Use a fixed-size array
+            data: vec![None; INITIAL_ORDER_COUNT], // Use a fixed-size array
         }
     }
 

@@ -1,6 +1,6 @@
 // level.rs
 
-use crate::orderbook::{price::Price, quantity::Qty, utils::Ptr};
+use crate::{price::Price, quantity::Qty};
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
@@ -36,14 +36,14 @@ impl Level {
 #[derive(Eq, PartialEq, Clone)]
 pub struct PriceLevel {
     pub price: Price,
-    pub level_idx: Ptr,
+    pub level_idx: LevelId,
 }
 
 impl Default for PriceLevel {
     fn default() -> Self {
         Self {
             price: Price(0),
-            level_idx: Ptr(0),
+            level_idx: LevelId(0),
         }
     }
 }
@@ -58,7 +58,7 @@ impl Debug for PriceLevel {
 }
 
 impl PriceLevel {
-    pub(crate) fn new(price: Price, level_idx: Ptr) -> Self {
+    pub(crate) fn new(price: Price, level_idx: LevelId) -> Self {
         Self { price, level_idx }
     }
 }
@@ -90,9 +90,4 @@ impl SortedLevels {
     pub fn remove(&mut self, price: Price) {
         self.0.retain(|px| px.price != price);
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 }

@@ -3,7 +3,7 @@
 use std::ops::{AddAssign, SubAssign};
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Copy)]
-pub struct Qty(pub i32);
+pub struct Qty(pub u32);
 
 impl Default for Qty {
     fn default() -> Self {

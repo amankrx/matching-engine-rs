@@ -1,0 +1,15 @@
+[package]
+name = "optimized-lob"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Aman Kumar <aman@amankrx.com>"]
+description = "An optimized version of the Limit Order Book implementation with Rust"
+readme = "README.md"
+homepage = "https://github.com/amankrx/matching-engine-rs/optimized-lob"
+repository = "https://github.com/amankrx/matching-engine-rs"
+keywords = ["rust", "order-book", "limit-order-book", "orderbook", "itch"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

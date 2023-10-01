@@ -1,0 +1,11 @@
+[package]
+name = "itch-parser"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+error-chain = "0.12.4"
+arrayvec = "0.7.4"
+nom = "7.1.3"
