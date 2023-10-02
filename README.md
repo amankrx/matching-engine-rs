@@ -1,5 +1,7 @@
 # matching-engine-rs
 
+[WIP]: Some of the implementations are buggy and missing as well.
+
 This is an attempt to implement a matching engine with Rust. At present, the project is organized into two main libraries: `itch-parser` and `optimized-lob`. The `itch-parser` is responsible for managing the processing of *NASDAQ ITCH 5.0* protocol data, while the `optimized-lob` library offers a streamlined and efficient implementation of a Limit Order Book (LOB). It's worth mentioning that I've made some specific design choices and adaptations for the Limit Order Book. Please note that the `optimized-lob` library calculates only the aggregate quantities at each price level and does not track the queue depth for each individual order.
 
 ## Performance
@@ -43,10 +45,10 @@ I have specifically used their `12302019.NASDAQ_ITCH50` data whose compressed fi
 Contributions to matching-engine-rs are welcome! If you encounter any issues, have suggestions, or would like to add new features, please feel free to open an issue or submit a pull request. Note that I'm still learning my way around Rust and trading systems, so any feedback is appreciated!
 ## Credits
 
-The matching engine is heavily inspired and researched from a few other implementations and blogs. Most of them are primarily implmented in C++. These are a few useful resources that helped me as well.
+These are a few useful resources that helped me and will be useful to understand the LOB as well. Most of them are primarily written in C/C++.
 - [CppTrader](https://github.com/chronoxor/CppTrader) matching engine implementation
-- A [StackOverflow answer](https://quant.stackexchange.com/questions/3783/what-is-an-efficient-data-structure-to-model-order-book/32482#32482) by Charles Cooper along with his implementation of a [optimized LOB](https://github.com/charles-cooper/itch-order-book/)
-- This [blog post](https://web.archive.org/web/20110219163448/http://howtohft.wordpress.com/2011/02/15/how-to-build-a-fast-limit-order-book/) by WK Selph gives a good idea for the low-level design of the orderbook.
+- A [StackOverflow answer](https://quant.stackexchange.com/questions/3783/what-is-an-efficient-data-structure-to-model-order-book/32482#32482) along with his implementation of a [optimized LOB](https://github.com/charles-cooper/itch-order-book/)
+- This [blog post](https://web.archive.org/web/20110219163448/http://howtohft.wordpress.com/2011/02/15/how-to-build-a-fast-limit-order-book/) gives a good idea for the low-level design of the orderbook.
 
 Apart from that, the implementation in the [itchy-rust](https://github.com/adwhit/itchy-rust) library was helpful to create the ITCH Parser. The `nom` library used in the library was pretty old, so I created a parser using the updated libraries and as suitable to my project.
 
