@@ -9,7 +9,10 @@ pub fn test_itch_parser() {
     let path_to_market_data = Path::new(&args[1]);
     let stream = itch_parser::MessageStream::from_file(path_to_market_data).unwrap();
 
-    let mut messages = 0;
+    let mut messages: u32 = 0;
+
+    println!("------------------------------------");
+    println!("ITCH Message Processing...\n");
 
     let start = Instant::now();
 
@@ -18,13 +21,13 @@ pub fn test_itch_parser() {
     }
 
     let duration = Instant::now() - start;
-    let speed = messages / duration.as_secs();
+    let speed = messages as f64 / duration.as_secs_f64();
 
-    println!("------------------------------------");
-    println!("ITCH Message Processing\n");
+    println!("Success...\n");
+    println!("ITCH Parsing Statistics:");
     println!("Total Messages: {}", messages);
     println!("Total Time: {:.3} seconds", duration.as_secs_f64());
-    println!("Speed: {} messages per second", speed);
+    println!("Speed: {} messages per second", speed as u32);
     println!("Latency: {} ns", duration.as_nanos() / messages as u128);
     println!("------------------------------------");
 }

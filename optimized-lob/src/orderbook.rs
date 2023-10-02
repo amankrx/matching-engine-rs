@@ -39,7 +39,7 @@ impl OrderBook {
             let cur_level = &mut levels.0[insertion_point];
 
             if cur_level.price == price {
-                order.set_level_id(LevelId(insertion_point as u32));
+                order.set_level_id(LevelId(cur_level.level_idx.0));
                 found_insertion_point = true;
                 break;
             } else if cur_level.price < price {

@@ -1,14 +1,7 @@
 // utils.rs
 
-use arrayvec::ArrayString;
 use nom::{IResult, Needed};
 use super::errors::*;
-
-/// Stack-allocated string of size 4 bytes
-pub type ArrayString4 = ArrayString<4>;
-
-/// Stack-allocated string of size 8 bytes
-pub type ArrayString8 = ArrayString<8>;
 
 #[inline]
 pub fn char_to_bool(input: u8) -> Result<bool> {
@@ -35,4 +28,3 @@ pub fn be_u48(i: &[u8]) -> IResult<&[u8], u64> {
         Ok((&i[6..], res))
     }
 }
-

@@ -1,14 +1,8 @@
 // message.rs
 
-use super::body::{Body, parse_system_event, parse_add_order, parse_replace_order};
+use super::body::{Body, parse_system_event};
 use super::utils::{be_u48, char_to_bool};
-use nom::{
-    bytes::streaming::take,
-    combinator::map_res,
-    number::streaming::{be_u16, be_u32, be_u64, be_u8},
-    sequence::tuple,
-    IResult,
-};
+use nom::{bytes::streaming::take, character::streaming::char, combinator::map_res, number::streaming::{be_u16, be_u32, be_u64, be_u8}, sequence::tuple, IResult, Parser};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Message {
@@ -51,15 +45,30 @@ pub fn parse_message(input: &[u8]) -> IResult<&[u8], Message> {
 fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
     match tag {
         b'A' => {
-            let (input, order) = parse_add_order(input, false)?;
-            Ok((input, Body::AddOrder(order)))
+            let (input, (order_id, is_bid, shares, stock, price)) = tuple((
+                be_u64,
+                char('B').map(|_| true).or(char('S').map(|_| false)),
+                be_u32,
+                be_u64,
+                be_u32,
+            ))(input)?;
+            Ok((
+                input,
+                Body::AddOrder {
+                    order_id,
+                    is_bid,
+                    shares,
+                    stock,
+                    price,
+                },
+            ))
         }
         b'B' => {
             let (input, _) = take(8usize)(input)?;
             Ok((input, Body::Pass(())))
         }
         b'C' => {
-            let (input, (reference, executed, match_number, printable, price)) = tuple((
+            let (input, (order_id, shares, match_number, printable, price)) = tuple((
                 be_u64,
                 be_u32,
                 be_u64,
@@ -69,25 +78,41 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
             Ok((
                 input,
                 Body::OrderExecutedWithPrice {
-                    reference,
-                    executed,
+                    order_id,
+                    shares,
                     match_number,
                     printable,
-                    price: price.into(),
+                    price,
                 },
             ))
         }
         b'D' => {
-            let (input, reference) = be_u64(input)?;
-            Ok((input, Body::DeleteOrder { reference }))
+            let (input, order_id) = be_u64(input)?;
+            Ok((input, Body::DeleteOrder { order_id }))
         }
         b'E' => {
-            let (input, (reference, executed, match_number)) = tuple((be_u64, be_u32, be_u64))(input)?;
-            Ok((input, Body::OrderExecuted { reference, executed, match_number }))
+            let (input, (order_id, shares, match_number)) = tuple((be_u64, be_u32, be_u64))(input)?;
+            Ok((input, Body::OrderExecuted { order_id, shares, match_number }))
         }
         b'F' => {
-            let (input, order) = parse_add_order(input, true)?;
-            Ok((input, Body::AddOrder(order)))
+            let (input, (order_id, is_bid, shares, stock, price, _m_pid)) = tuple((
+                be_u64,
+                char('B').map(|_| true).or(char('S').map(|_| false)),
+                be_u32,
+                be_u64,
+                be_u32,
+                be_u32,
+            ))(input)?;
+            Ok((
+                input,
+                Body::AddOrder {
+                    order_id,
+                    is_bid,
+                    shares,
+                    stock,
+                    price,
+                },
+            ))
         }
         b'H' => {
             let (input, _) = take(14usize)(input)?;
@@ -130,8 +155,21 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
             Ok((input, Body::SystemEvent { event: event_code }))
         }
         b'U' => {
-            let (input, order) = parse_replace_order(input)?;
-            Ok((input, Body::ReplaceOrder(order)))
+            let (input, (old_order_id, new_order_id, shares, price)) = tuple((
+                be_u64,
+                be_u64,
+                be_u32,
+                be_u32,
+            ))(input)?;
+            Ok((
+                input,
+                Body::ReplaceOrder {
+                    old_order_id,
+                    new_order_id,
+                    shares,
+                    price,
+                },
+            ))
         }
         b'V' => {
             let (input, _) = take(24usize)(input)?;
@@ -142,8 +180,8 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
             Ok((input, Body::Pass(())))
         }
         b'X' => {
-            let (input, (reference, cancelled)) = tuple((be_u64, be_u32))(input)?;
-            Ok((input, Body::OrderCancelled { reference, cancelled }))
+            let (input, (order_id, shares)) = tuple((be_u64, be_u32))(input)?;
+            Ok((input, Body::OrderCancelled { order_id, shares }))
         }
         b'Y' => {
             let (input, _) = take(9usize)(input)?;

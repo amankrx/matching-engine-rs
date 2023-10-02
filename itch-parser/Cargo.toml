@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 error-chain = "0.12.4"
-arrayvec = "0.7.4"
 nom = "7.1.3"

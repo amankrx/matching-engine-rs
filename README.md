@@ -1,7 +1,5 @@
 # matching-engine-rs
 
-[WIP]: Some of the implementations are buggy and missing as well.
-
 This is an attempt to implement a matching engine with Rust. At present, the project is organized into two main libraries: `itch-parser` and `optimized-lob`. The `itch-parser` is responsible for managing the processing of *NASDAQ ITCH 5.0* protocol data, while the `optimized-lob` library offers a streamlined and efficient implementation of a Limit Order Book (LOB). It's worth mentioning that I've made some specific design choices and adaptations for the Limit Order Book. Please note that the `optimized-lob` library calculates only the aggregate quantities at each price level and does not track the queue depth for each individual order.
 
 ## Performance
@@ -9,12 +7,15 @@ This is an attempt to implement a matching engine with Rust. At present, the pro
 ### ITCH Processing
 
 ```text
-ITCH Message Processing
+ITCH Message Processing...
 
+Success...
+
+ITCH Parsing Statistics:
 Total Messages: 268744780
-Total Time: 8.266 seconds
-Speed: 33593097 messages per second
-Latency: 30 ns
+Total Time: 6.683 seconds
+Speed: 40213266 messages per second
+Latency: 24 ns
 ```
 
 ### LOB Performance
@@ -22,13 +23,21 @@ Latency: 30 ns
 ```text
 ITCH Message Processing
 
+Success...
+
+Performance Metrics:
 Total Messages: 268744780
-ITCH Latency: 94 ns
-Total Time: 25.326 seconds
-Speed: 10749791 msg/second
+Latency: 128 ns
+Total Time: 34.491 seconds
+Speed: 7791658 msg/second
+
+Orderbook Statistics:
 Total Add Orders: 118631456
 Total Execute Orders: 5822741
 Total Cancel Orders: 2787676
+Total Delete Orders: 114360997
+Total Replace Orders: 21639067
+
 
 ```
 ## ITCH Specifications
@@ -43,6 +52,7 @@ I have specifically used their `12302019.NASDAQ_ITCH50` data whose compressed fi
 ## Contributing
 
 Contributions to matching-engine-rs are welcome! If you encounter any issues, have suggestions, or would like to add new features, please feel free to open an issue or submit a pull request. Note that I'm still learning my way around Rust and trading systems, so any feedback is appreciated!
+
 ## Credits
 
 These are a few useful resources that helped me and will be useful to understand the LOB as well. Most of them are primarily written in C/C++.

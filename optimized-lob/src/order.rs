@@ -103,11 +103,7 @@ impl OidMap {
         let idx = oid.0 as usize;
         if idx < self.data.len() {
             if let Some(order) = &mut self.data[idx] {
-                if order.qty == qty {
-                    self.data[idx] = None;
-                } else {
-                    order.qty -= qty;
-                }
+                order.qty -= qty;
             }
         }
     }

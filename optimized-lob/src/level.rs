@@ -13,6 +13,7 @@ impl Default for LevelId {
     }
 }
 
+#[derive(Debug)]
 pub struct Level {
     pub price: Price,
     pub size: Qty,
@@ -88,6 +89,11 @@ impl SortedLevels {
     }
 
     pub fn remove(&mut self, price: Price) {
-        self.0.retain(|px| px.price != price);
+        for px in self.0.iter_mut().rev() {
+            if px.price == price {
+                self.0.retain(|x| x.price != price);
+                break;
+            }
+        }
     }
 }

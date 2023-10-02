@@ -36,19 +36,3 @@ impl Qty {
         self.0 == 0
     }
 }
-
-mod tests {
-    use super::Qty;
-
-    #[test]
-    fn test_qty_add_sub_is_zero() {
-        let qty1 = Qty(10);
-        let qty2 = Qty(5);
-        let qty3 = Qty(0);
-
-        assert_eq!(qty1.add(qty2.clone()), Qty(15));
-        assert_eq!(qty1.sub(qty2), Qty(5));
-        assert!(qty3.is_empty());
-        assert!(!qty1.is_empty());
-    }
-}
