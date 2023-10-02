@@ -31,7 +31,7 @@ pub enum Body {
         printable: bool,
         price: u32,
     },
-    ReplaceOrder{
+    ReplaceOrder {
         old_order_id: u64,
         new_order_id: u64,
         shares: u32,
@@ -64,7 +64,12 @@ pub fn parse_system_event(input: &[u8]) -> IResult<&[u8], EventCode> {
         'M' => EventCode::EndOfMarketHours,
         'E' => EventCode::EndOfSystemHours,
         'C' => EventCode::EndOfMessages,
-        _ => return Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Tag))),
+        _ => {
+            return Err(nom::Err::Error(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Tag,
+            )))
+        }
     };
 
     Ok((input, event))

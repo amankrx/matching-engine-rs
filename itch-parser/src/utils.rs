@@ -1,7 +1,7 @@
 // utils.rs
 
-use nom::{IResult, Needed};
 use super::errors::*;
+use nom::{IResult, Needed};
 
 #[inline]
 pub fn char_to_bool(input: u8) -> Result<bool> {
@@ -17,7 +17,9 @@ pub fn char_to_bool(input: u8) -> Result<bool> {
 #[inline]
 pub fn be_u48(i: &[u8]) -> IResult<&[u8], u64> {
     if i.len() < 6 {
-        Err(nom::Err::Incomplete(Needed::Size(std::num::NonZeroUsize::new(6).unwrap())))
+        Err(nom::Err::Incomplete(Needed::Size(
+            std::num::NonZeroUsize::new(6).unwrap(),
+        )))
     } else {
         let res = ((i[0] as u64) << 40)
             + ((i[1] as u64) << 32)

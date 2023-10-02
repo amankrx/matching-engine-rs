@@ -1,7 +1,7 @@
 // orderbook.rs
 
 use crate::{
-    level::{Level, LevelId, SortedLevels, PriceLevel},
+    level::{Level, LevelId, PriceLevel, SortedLevels},
     order::Order,
     pool::LevelPool,
     price::Price,

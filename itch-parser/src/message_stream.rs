@@ -1,10 +1,10 @@
 // message_stream.rs
 
 use super::errors::*;
+use super::message::{parse_message, Message};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use super::message::{Message, parse_message};
 
 const BUF_SIZE: usize = 64 * 1024;
 
@@ -92,7 +92,7 @@ impl<R: Read> Iterator for MessageStream<R> {
                             "Parse failed: {:?}, buffer context",
                             &self.buffer[self.buf_start..self.buf_start + 20]
                         )
-                            .into()))
+                        .into()))
                     }
                 }
                 Err(nom::Err::Incomplete(_)) => {

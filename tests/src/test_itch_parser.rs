@@ -1,12 +1,10 @@
 extern crate itch_parser;
 
-use std::env::args;
 use std::path::Path;
 use std::time::Instant;
 
-pub fn test_itch_parser() {
-    let args: Vec<String> = args().collect();
-    let path_to_market_data = Path::new(&args[1]);
+pub fn test_itch_parser(file_path: &str) {
+    let path_to_market_data = Path::new(file_path);
     let stream = itch_parser::MessageStream::from_file(path_to_market_data).unwrap();
 
     let mut messages: u32 = 0;

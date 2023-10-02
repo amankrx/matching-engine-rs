@@ -1,8 +1,15 @@
 // message.rs
 
-use super::body::{Body, parse_system_event};
+use super::body::{parse_system_event, Body};
 use super::utils::{be_u48, char_to_bool};
-use nom::{bytes::streaming::take, character::streaming::char, combinator::map_res, number::streaming::{be_u16, be_u32, be_u64, be_u8}, sequence::tuple, IResult, Parser};
+use nom::{
+    bytes::streaming::take,
+    character::streaming::char,
+    combinator::map_res,
+    number::streaming::{be_u16, be_u32, be_u64, be_u8},
+    sequence::tuple,
+    IResult, Parser,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Message {
@@ -22,12 +29,8 @@ pub struct Message {
 pub fn parse_message(input: &[u8]) -> IResult<&[u8], Message> {
     let (input, _) = be_u16(input)?;
     let (input, tag) = be_u8(input)?;
-    let (input, (stock_locate, tracking_number, timestamp, body)) = tuple((
-        be_u16,
-        be_u16,
-        be_u48,
-        |input| parse_body(input, tag),
-    ))(input)?;
+    let (input, (stock_locate, tracking_number, timestamp, body)) =
+        tuple((be_u16, be_u16, be_u48, |input| parse_body(input, tag)))(input)?;
 
     Ok((
         input,
@@ -68,13 +71,8 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
             Ok((input, Body::Pass(())))
         }
         b'C' => {
-            let (input, (order_id, shares, match_number, printable, price)) = tuple((
-                be_u64,
-                be_u32,
-                be_u64,
-                map_res(be_u8, char_to_bool),
-                be_u32,
-            ))(input)?;
+            let (input, (order_id, shares, match_number, printable, price)) =
+                tuple((be_u64, be_u32, be_u64, map_res(be_u8, char_to_bool), be_u32))(input)?;
             Ok((
                 input,
                 Body::OrderExecutedWithPrice {
@@ -92,7 +90,14 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
         }
         b'E' => {
             let (input, (order_id, shares, match_number)) = tuple((be_u64, be_u32, be_u64))(input)?;
-            Ok((input, Body::OrderExecuted { order_id, shares, match_number }))
+            Ok((
+                input,
+                Body::OrderExecuted {
+                    order_id,
+                    shares,
+                    match_number,
+                },
+            ))
         }
         b'F' => {
             let (input, (order_id, is_bid, shares, stock, price, _m_pid)) = tuple((
@@ -155,12 +160,8 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
             Ok((input, Body::SystemEvent { event: event_code }))
         }
         b'U' => {
-            let (input, (old_order_id, new_order_id, shares, price)) = tuple((
-                be_u64,
-                be_u64,
-                be_u32,
-                be_u32,
-            ))(input)?;
+            let (input, (old_order_id, new_order_id, shares, price)) =
+                tuple((be_u64, be_u64, be_u32, be_u32))(input)?;
             Ok((
                 input,
                 Body::ReplaceOrder {
@@ -187,6 +188,9 @@ fn parse_body(input: &[u8], tag: u8) -> IResult<&[u8], Body> {
             let (input, _) = take(9usize)(input)?;
             Ok((input, Body::Pass(())))
         }
-        _ => Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Tag))),
+        _ => Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::Tag,
+        ))),
     }
 }
