@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://semver.org/)
 [![GitHub Stars](https://img.shields.io/github/stars/amankrx/matching-engine-rs?logo=github&label=Stars&color=yellow)](https://github.com/amankrx/matching-engine-rs)
 
-This is an attempt to implement a matching engine with Rust. Currently, I have created an implementation of a Limit Order Book.
+This is an attempt to implement a matching engine with Rust. Currently, I have created an implementation of a Limit Order Book. The LOB offers fast processing of the ITCH data clocking at 11.3 Million messages per second (or a latency of 88 ns) as tested on my [local machine](#device-specifications). Checkout the [Performance](#performance) section for more information.
 
 ## Table of Contents
 - [Project Structure](#project-structure)
@@ -70,7 +70,6 @@ CPU logical cores: 8
 CPU physical cores: 8
 RAM total: 16 GB
 RAM free: 11.5 GB
-OS bits: 64-bit
 ```
 ## Performance
 
