@@ -60,7 +60,7 @@ impl<R: Read> MessageStream<R> {
 
             {
                 let (left, right) = self.buffer.split_at_mut(self.buf_start);
-                left[..right.len()].copy_from_slice(&right[..]);
+                left[..right.len()].copy_from_slice(right);
                 self.buf_start = 0;
                 self.buf_end = right.len();
             }
@@ -107,7 +107,7 @@ impl<R: Read> Iterator for MessageStream<R> {
                     return None;
                 }
                 if self.in_error_state {
-                    return None;
+                    None
                 } else {
                     self.in_error_state = true;
                     Some(Err("Unexpected EOF".into()))
@@ -120,7 +120,7 @@ impl<R: Read> Iterator for MessageStream<R> {
             }
             Err(e) => {
                 if self.in_error_state {
-                    return None;
+                    None
                 } else {
                     self.in_error_state = true;
                     Some(Err(e))
