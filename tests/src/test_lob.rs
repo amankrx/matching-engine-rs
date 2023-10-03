@@ -16,7 +16,7 @@ pub fn test_lob(file_path: &str) {
     let stream = MessageStream::from_file(path_to_market_data).unwrap();
 
     println!("------------------------------------");
-    println!("ITCH Message Processing\n");
+    println!("LOB Processing...\n");
 
     // Counters
     let mut messages = 0;

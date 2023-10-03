@@ -2,7 +2,7 @@
 
 use crate::level::{Level, LevelId};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LevelPool {
     allocated: Vec<Level>,
     free: Vec<LevelId>,

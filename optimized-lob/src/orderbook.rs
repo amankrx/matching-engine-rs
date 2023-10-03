@@ -9,6 +9,7 @@ use crate::{
     utils::MAX_LEVELS,
 };
 
+#[derive(Clone)]
 pub struct OrderBook {
     pub bids: SortedLevels,
     pub asks: SortedLevels,

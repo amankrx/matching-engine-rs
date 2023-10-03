@@ -6,12 +6,11 @@ use crate::{
     orderbook::OrderBook,
     price::Price,
     quantity::Qty,
-    utils::BookId,
+    utils::{BookId, MAX_BOOKS},
 };
-use std::collections::HashMap;
 
 pub struct OrderBookManager {
-    pub books: HashMap<BookId, OrderBook>,
+    pub books: Vec<Option<OrderBook>>,
     pub oid_map: OidMap,
 }
 
@@ -25,7 +24,7 @@ impl OrderBookManager {
     #[inline]
     pub fn new() -> Self {
         Self {
-            books: HashMap::new(),
+            books: vec![None; MAX_BOOKS],
             oid_map: OidMap::new(),
         }
     }
@@ -53,21 +52,25 @@ impl OrderBookManager {
         let mut order = Order::new(qty, LevelId(0), book_id);
 
         // Now you can use order as needed
-        self.books
-            .entry(book_id)
-            .or_insert_with(OrderBook::new)
-            .add_order(&mut order, price, qty);
-
+        if self.books[book_id.value() as usize].is_none() {
+            self.books[book_id.value() as usize] = Some(OrderBook::new());
+        }
+        if let Some(orderbook) = self.books.get_mut(book_id.value() as usize).unwrap() {
+            orderbook.add_order(&mut order, price, qty);
+        }
         self.oid_map.insert(order_id, &order);
     }
 
     #[inline]
     pub fn remove_order(&mut self, order_id: OrderId) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
-            self.books
-                .get_mut(&order.book_id())
+            if let Some(orderbook) = self
+                .books
+                .get_mut(order.book_id().value() as usize)
                 .unwrap()
-                .remove_order(order);
+            {
+                orderbook.remove_order(order);
+            }
         }
         self.oid_map.remove(order_id);
     }
@@ -75,28 +78,37 @@ impl OrderBookManager {
     #[inline]
     pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
-            self.books
-                .get_mut(&order.book_id())
+            if let Some(orderbook) = self
+                .books
+                .get_mut(order.book_id().value() as usize)
                 .unwrap()
-                .reduce_order(order, qty);
-            self.oid_map.update_qty(order_id, qty);
+            {
+                orderbook.reduce_order(order, qty);
+            }
         }
+        self.oid_map.update_qty(order_id, qty);
     }
 
     #[inline]
     pub fn execute_order(&mut self, order_id: OrderId, qty: Qty) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
             if order.qty() == qty {
-                self.books
-                    .get_mut(&order.book_id())
+                if let Some(orderbook) = self
+                    .books
+                    .get_mut(order.book_id().value() as usize)
                     .unwrap()
-                    .remove_order(order);
+                {
+                    orderbook.remove_order(order);
+                }
                 self.oid_map.remove(order_id);
             } else {
-                self.books
-                    .get_mut(&order.book_id())
+                if let Some(orderbook) = self
+                    .books
+                    .get_mut(order.book_id().value() as usize)
                     .unwrap()
-                    .reduce_order(order, qty);
+                {
+                    orderbook.reduce_order(order, qty);
+                }
                 self.oid_map.update_qty(order_id, qty);
             }
         }
@@ -114,15 +126,20 @@ impl OrderBookManager {
         let mut is_bid = true;
         let mut book_id = BookId(0);
         if let Some(order) = order {
-            let book = self.books.get_mut(&order.book_id()).unwrap();
-            is_bid = book
-                .level_pool
-                .get(order.level_id())
+            if let Some(book) = self
+                .books
+                .get_mut(order.book_id().value() as usize)
                 .unwrap()
-                .price()
-                .is_bid();
-            book_id = order.book_id();
-            book.remove_order(order);
+            {
+                is_bid = book
+                    .level_pool
+                    .get(order.level_id())
+                    .unwrap()
+                    .price()
+                    .is_bid();
+                book_id = order.book_id();
+                book.remove_order(order);
+            }
             self.oid_map.remove(order_id);
         }
         self.add_order(new_order_id, book_id, new_qty, new_price, is_bid);

@@ -77,7 +77,7 @@ OS bits: 64-bit
 ### ITCH Processing
 
 ```text
-ITCH Message Processing...
+ITCH Parser Processing...
 
 Success...
 
@@ -91,15 +91,15 @@ Latency: 22 ns
 ### LOB Performance
 
 ```text
-ITCH Message Processing
+LOB Processing...
 
 Success...
 
 Performance Metrics:
 Total Messages: 268744780
-ITCH Latency: 120 ns
-Total Time: 32.317 seconds
-Speed: 8315877 msg/second
+ITCH Latency: 88 ns
+Total Time: 23.660 seconds
+Speed: 11358746 msg/second
 
 Orderbook Statistics:
 Total Add Orders: 118631456

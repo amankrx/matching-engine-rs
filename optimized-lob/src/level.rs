@@ -14,7 +14,7 @@ impl LevelId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Level {
     price: Price,
     size: Qty,
@@ -121,7 +121,7 @@ impl PartialOrd for PriceLevel {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SortedLevels(Vec<PriceLevel>);
 
 impl SortedLevels {

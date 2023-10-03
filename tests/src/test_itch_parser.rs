@@ -10,7 +10,7 @@ pub fn test_itch_parser(file_path: &str) {
     let mut messages: u32 = 0;
 
     println!("------------------------------------");
-    println!("ITCH Message Processing...\n");
+    println!("ITCH Parser Processing...\n");
 
     let start = Instant::now();
 
@@ -25,7 +25,7 @@ pub fn test_itch_parser(file_path: &str) {
     println!("ITCH Parsing Statistics:");
     println!("Total Messages: {}", messages);
     println!("Total Time: {:.3} seconds", duration.as_secs_f64());
-    println!("Speed: {} messages per second", speed as u32);
+    println!("Speed: {} msg/second", speed as u32);
     println!("Latency: {} ns", duration.as_nanos() / messages as u128);
     println!("------------------------------------");
 }
