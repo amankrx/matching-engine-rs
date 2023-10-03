@@ -35,8 +35,8 @@ fn test_lob() {
     orderbook_manager.replace_order(
         OrderId(0), // Order ID to replace
         OrderId(1), // New Order ID
-        Qty(100), // New Quantity
-        600, // New Price
+        Qty(50), // New Quantity
+        500, // New Price
     );
     
     // Remove an order

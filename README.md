@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://semver.org/)
 [![GitHub Stars](https://img.shields.io/github/stars/amankrx/matching-engine-rs?logo=github&label=Stars&color=yellow)](https://github.com/amankrx/matching-engine-rs)
 
-This is an attempt to implement a matching engine with Rust. Currently I have created an implementation of a Limit Order Book.
+This is an attempt to implement a matching engine with Rust. Currently, I have created an implementation of a Limit Order Book.
 
 ## Table of Contents
 - [Project Structure](#project-structure)
@@ -20,7 +20,7 @@ These project consists of two libraries:
 - **[itch-parser](itch-parser)**: This library is responsible for managing the processing of *NASDAQ ITCH 5.0* protocol data. It parses the useful fields that will be required for the Limit Order Book. The remaining fields are skipped using placeholders. Check out the folder's [README](itch-parser/README.md) for more information.
 - **[optimized-lob](optimized-lob)**: This library contains a streamlined and efficient implementation of a Limit Order Book (LOB). It is worth noting that the LOB simply stores a few useful fields that will be required for creating a LOB. It just keeps an aggregate quantities at each level. Check out the folder's [README](optimized-lob/README.md) for more information.
 
-Apart from that there is a testing suite for both libraries that can be found in the [tests](tests) directory. 
+Apart from that, there is a testing suite for both libraries that can be found in the "[tests](tests)" directory. 
 
 ## Build, Run, and Test
 Make sure you have Rust installed. Also, you must download the NASDAQ ITCH 5.0 data whose instructions are available in the [ITCH Specifications](#ITCH-Specifications). 
@@ -53,6 +53,11 @@ ITCH_DATA=PATH_TO_ITCH_DATA_FILE cargo run -- --itch-parser
 or
 ```bash
 ITCH_DATA=PATH_TO_ITCH_DATA_FILE cargo run --release -- --itch-parser
+```
+
+### Testing
+```bash
+cargo test
 ```
 
 

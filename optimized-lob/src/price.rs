@@ -1,40 +1,30 @@
 // price.rs
 
-#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Debug, Default)]
 pub struct Price(pub i32);
 
-impl Default for Price {
-    fn default() -> Self {
-        Self(0)
-    }
-}
-
 impl Price {
+    /// Returns the value of the price.
+    #[inline]
+    pub fn value(&self) -> i32 {
+        self.0
+    }
+
+    /// Returns true if the price is a bid.
+    #[inline]
     pub fn is_bid(&self) -> bool {
         self.0 > 0
     }
 
-    pub fn get_absolute_value(&self) -> i32 {
-        if self.is_bid() {
-            self.0
-        } else {
-            -self.0
-        }
+    /// Returns the absolute value of the price.
+    #[inline]
+    pub fn absolute(&self) -> i32 {
+        self.0.abs()
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_price_is_bid() {
-        let positive_price = Price(100);
-        let zero_price = Price(0);
-        let negative_price = Price(-100);
-
-        assert!(positive_price.is_bid());
-        assert!(!zero_price.is_bid());
-        assert!(!negative_price.is_bid());
+    /// Convert a u32 to a Price.
+    #[inline]
+    pub fn from_u32(price: u32, is_bid: bool) -> Self {
+        Self(price as i32 * if is_bid { 1 } else { -1 })
     }
 }

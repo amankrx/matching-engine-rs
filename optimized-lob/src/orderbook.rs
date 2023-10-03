@@ -15,7 +15,14 @@ pub struct OrderBook {
     pub level_pool: LevelPool,
 }
 
+impl Default for OrderBook {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OrderBook {
+    #[inline]
     pub fn new() -> Self {
         Self {
             bids: SortedLevels::new(),
@@ -24,6 +31,7 @@ impl OrderBook {
         }
     }
 
+    #[inline]
     pub fn add_order(&mut self, order: &mut Order, price: Price, qty: Qty) {
         let levels = if price.is_bid() {
             &mut self.bids
@@ -31,52 +39,60 @@ impl OrderBook {
             &mut self.asks
         };
 
-        let mut insertion_point = levels.0.len();
+        let mut insertion_point = levels.len();
         let mut found_insertion_point = false;
 
         while insertion_point > 0 {
             insertion_point -= 1;
-            let cur_level = &mut levels.0[insertion_point];
+            let cur_level = levels.get_mut(insertion_point);
 
-            if cur_level.price == price {
-                order.set_level_id(LevelId(cur_level.level_idx.0));
-                found_insertion_point = true;
-                break;
-            } else if cur_level.price < price {
-                insertion_point += 1;
-                break;
+            match cur_level.price().cmp(&price) {
+                std::cmp::Ordering::Equal => {
+                    order.set_level_id(LevelId(cur_level.level_id().value()));
+                    found_insertion_point = true;
+                    break;
+                }
+                std::cmp::Ordering::Less => {
+                    insertion_point += 1;
+                    break;
+                }
+                _ => {}
             }
         }
 
         if !found_insertion_point {
             let level_ptr = self.level_pool.alloc();
-            order.level_id = LevelId(level_ptr.0);
+            order.set_level_id(level_ptr);
             let level = Level::new(price, Qty(0));
-            self.level_pool.allocated[level_ptr.0 as usize] = level;
+            self.level_pool.set_level(level_ptr, level);
             let px = PriceLevel::new(price, level_ptr);
             levels.insert(insertion_point, px);
         }
-        self.level_pool.allocated[order.level_id.0 as usize].size += qty;
+        self.level_pool.get_mut(order.level_id()).unwrap().incr(qty);
     }
 
+    #[inline]
     pub fn reduce_order(&mut self, order: &mut Order, qty: Qty) {
-        self.level_pool.allocated[order.level_id.0 as usize].size -= qty;
+        self.level_pool
+            .get_mut(LevelId(order.level_id().value()))
+            .unwrap()
+            .decr(qty);
     }
 
+    #[inline]
     pub fn remove_order(&mut self, order: &mut Order) {
-        let order_level_id = order.level_id.0 as usize;
+        let lvl = self.level_pool.get_mut(order.level_id()).unwrap();
+        lvl.decr(order.qty());
 
-        self.level_pool.allocated[order_level_id].size -= order.qty;
-
-        if self.level_pool.allocated[order_level_id].size.is_empty() {
-            let level_price = self.level_pool.allocated[order_level_id].price;
+        if lvl.size().is_empty() {
+            let level_price = lvl.price();
             let levels = if level_price.is_bid() {
                 &mut self.bids
             } else {
                 &mut self.asks
             };
             levels.remove(level_price);
-            self.level_pool.free(LevelId(order.level_id.0));
+            self.level_pool.free(LevelId(order.level_id().value()));
         }
     }
 }
