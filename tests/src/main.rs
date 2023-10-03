@@ -1,4 +1,5 @@
 // main.rs
+mod lob_tests;
 mod test_itch_parser;
 mod test_lob;
 
