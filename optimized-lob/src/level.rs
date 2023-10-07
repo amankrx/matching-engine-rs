@@ -7,6 +7,7 @@ use std::fmt::Debug;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct LevelId(pub u32);
 
+/// Represents the Level ID for a price.
 impl LevelId {
     #[inline]
     pub fn value(&self) -> u32 {
@@ -14,6 +15,8 @@ impl LevelId {
     }
 }
 
+/// Represents the Level for a price.
+/// It stores the price and total capacity of the level.
 #[derive(Debug, Clone)]
 pub struct Level {
     price: Price,
@@ -67,6 +70,7 @@ impl Level {
     }
 }
 
+/// Represents a price level that will be used to locate the level in the orderbook.
 #[derive(Eq, PartialEq, Clone)]
 pub struct PriceLevel {
     price: Price,

@@ -3,6 +3,7 @@
 use super::errors::*;
 use nom::{IResult, Needed};
 
+/// Converts a u8 input to a boolean.
 #[inline]
 pub fn char_to_bool(input: u8) -> Result<bool> {
     if input == b'Y' {
@@ -14,6 +15,8 @@ pub fn char_to_bool(input: u8) -> Result<bool> {
     }
 }
 
+/// Parses a big-endian u48 integer from a byte slice.
+/// Useful for parsing timestamps.
 #[inline]
 pub fn be_u48(i: &[u8]) -> IResult<&[u8], u64> {
     if i.len() < 6 {

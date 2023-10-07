@@ -1,14 +1,14 @@
 // message_stream.rs
 
-use super::errors::*;
-use super::message::{parse_message, Message};
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use super::{
+    errors::*,
+    message::{parse_message, Message},
+};
+use std::{fs::File, io::Read, path::Path};
 
 const BUF_SIZE: usize = 64 * 1024;
 
-/// Represents an iterable stream of ITCH protocol messages
+/// Represents an iterable stream of ITCH protocol messages.
 pub struct MessageStream<R> {
     reader: R,
     buffer: Box<[u8; BUF_SIZE]>,
@@ -16,11 +16,12 @@ pub struct MessageStream<R> {
     buf_end: usize,
     bytes_read: usize,
     read_calls: u32,
-    message_ct: u32, // messages read so far
+    message_ct: u32, // Total messages read so far
     in_error_state: bool,
 }
 
 impl MessageStream<File> {
+    /// Creates a new `MessageStream` from a file at the specified path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<MessageStream<File>> {
         let reader = File::open(path)?;
         Ok(MessageStream::from_reader(reader))
@@ -28,11 +29,13 @@ impl MessageStream<File> {
 }
 
 impl<R: Read> MessageStream<R> {
+    /// Creates a new `MessageStream` from any type that implements the `Read` trait.
     #[inline]
     pub fn from_reader(reader: R) -> MessageStream<R> {
         MessageStream::new(reader)
     }
 
+    /// Initializes a new `MessageStream` with default values.
     #[inline]
     fn new(reader: R) -> MessageStream<R> {
         MessageStream {
@@ -47,13 +50,11 @@ impl<R: Read> MessageStream<R> {
         }
     }
 
+    /// Fetches more bytes from the reader and updates the buffer.
     #[inline]
     fn fetch_more_bytes(&mut self) -> Result<usize> {
         self.read_calls += 1;
         if self.buf_end == BUF_SIZE {
-            // we need more data from the reader, but first,
-            // copy the remnants back to the beginning of the buffer
-
             // Safety Checks
             assert!(self.buf_start > BUF_SIZE / 2);
             assert!(BUF_SIZE - self.buf_start < 100);
@@ -96,13 +97,13 @@ impl<R: Read> Iterator for MessageStream<R> {
                     }
                 }
                 Err(nom::Err::Incomplete(_)) => {
-                    // fall through to below... necessary to appease borrow checker
+                    // Fall through to below... necessary to appease borrow checker.
                 }
             }
         }
         match self.fetch_more_bytes() {
             Ok(0) => {
-                // Are we part-way through a parse? If not, assume we are done
+                // If we get EOF, return None
                 if self.buf_start == self.buf_end {
                     return None;
                 }

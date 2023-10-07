@@ -9,9 +9,10 @@ use crate::{
     utils::{BookId, MAX_BOOKS},
 };
 
+/// Manages multiple order books and orders.
 pub struct OrderBookManager {
-    pub books: Vec<Option<OrderBook>>,
-    pub oid_map: OidMap,
+    pub books: Vec<Option<OrderBook>>, // A mapping of book IDs to order books.
+    pub oid_map: OidMap,               // A mapping of order IDs to order objects.
 }
 
 impl Default for OrderBookManager {
@@ -21,6 +22,7 @@ impl Default for OrderBookManager {
 }
 
 impl OrderBookManager {
+    /// Creates a new OrderBookManager with empty books and an OidMap.
     #[inline]
     pub fn new() -> Self {
         Self {
@@ -29,6 +31,26 @@ impl OrderBookManager {
         }
     }
 
+    /// Adds a new order to the order book based on the provided parameters.
+    /// ## Arguments:
+    /// - `order_id`: The order ID for the order. Represented as unique reference number.
+    /// - `book_id`: The identifier for the book where the order will be placed. Represents as stock locate.
+    /// - `qty`: The quantity of the order. Represented as shares in the orderbook.
+    /// - `price32`: The price of the order as a 32-bit unsigned integer. Return the Price(4) in the orderbook.
+    /// - `is_bid`: A flag indicating whether the order is a bid (true) or ask (false). Return the Buy/Sell Indicator as boolean.
+    ///
+    /// ## Example:
+    /// ```
+    /// let mut orderbook_manager = OrderBookManager::new();
+    ///
+    /// orderbook_manager.add_order(
+    ///     OrderId(0), // Order ID
+    ///     BookId(0), // Book ID
+    ///     Qty(100), // Quantity
+    ///     600, // Price
+    ///     true, // Is Bid
+    /// );
+    /// ```
     #[inline]
     pub fn add_order(
         &mut self,
@@ -44,14 +66,14 @@ impl OrderBookManager {
             -(price32 as i32)
         };
 
-        // Create a Price(i32) from the adjusted price_i32
+        // Create a Price(i32) from the adjusted price_i32.
         let price = Price(price_i32);
 
         self.oid_map.reserve(order_id);
 
         let mut order = Order::new(qty, LevelId(0), book_id);
 
-        // Now you can use order as needed
+        // Check if the book for the given book_id exists; if not, create it.
         if self.books[book_id.value() as usize].is_none() {
             self.books[book_id.value() as usize] = Some(OrderBook::new());
         }
@@ -61,6 +83,15 @@ impl OrderBookManager {
         self.oid_map.insert(order_id, &order);
     }
 
+    /// Removes an order from the order book based on its order ID.
+    /// ## Arguments:
+    /// - `order_id`: The order ID for the order. Represented as unique reference number.
+    /// ## Example:
+    /// ```
+    /// let mut orderbook_manager = OrderBookManager::new();
+    ///
+    /// orderbook.remove_order(OrderId(0));
+    /// ```
     #[inline]
     pub fn remove_order(&mut self, order_id: OrderId) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
@@ -75,6 +106,16 @@ impl OrderBookManager {
         self.oid_map.remove(order_id);
     }
 
+    /// Cancels an order by reducing its quantity in the order book.
+    /// ## Arguments:
+    /// - `order_id`: The order ID for the order. Represented as unique reference number.
+    /// - `qty`: The quantity of the order to be cancelled. Represented as shares in the orderbook.
+    /// ## Example:
+    /// ```
+    /// let mut orderbook_manager = OrderBookManager::new();
+    ///
+    /// orderbook.cancel_order(OrderId(0), Qty(100));
+    /// ```
     #[inline]
     pub fn cancel_order(&mut self, order_id: OrderId, qty: Qty) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
@@ -89,6 +130,16 @@ impl OrderBookManager {
         self.oid_map.update_qty(order_id, qty);
     }
 
+    /// Executes an order by either removing it completely or reducing its quantity.
+    /// ## Arguments:
+    /// - `order_id`: The order ID for the order. Represented as unique reference number.
+    /// - `qty`: The quantity of the order to be executed. Represented as shares in the orderbook.
+    /// ## Example:
+    /// ```
+    /// let mut orderbook_manager = OrderBookManager::new();
+    ///
+    /// orderbook.execute_order(OrderId(0), Qty(100));
+    /// ```
     #[inline]
     pub fn execute_order(&mut self, order_id: OrderId, qty: Qty) {
         if let Some(order) = self.oid_map.get_mut(order_id) {
@@ -114,6 +165,24 @@ impl OrderBookManager {
         }
     }
 
+    /// Replaces an existing order with a new order based on order IDs and new parameters.
+    /// ## Arguments:
+    /// - `order_id`: The order ID for the order to be replaced. Represented as Original unique reference number.
+    /// - `new_order_id`: The new order ID for the order that has to be replaced. Represented as the new unique reference number.
+    /// - `new_qty`: The quantity of the new order. Represented as shares in the orderbook.
+    /// - `new_price`: The price of the new order as a 32-bit unsigned integer. Return the Price(4) in the orderbook.
+    ///
+    /// ## Example:
+    /// ```
+    /// let mut orderbook_manager = OrderBookManager::new();
+    ///
+    /// orderbook_manager.replace_order(
+    ///     OrderId(0), // Old Order ID
+    ///     OrderId(0), // New Order ID
+    ///     Qty(200), // Quantity
+    ///     500, // Price
+    /// );
+    /// ```
     #[inline]
     pub fn replace_order(
         &mut self,

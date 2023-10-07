@@ -2,7 +2,7 @@
 
 use nom::IResult;
 
-/// The message body. Refer to the protocol spec for interpretation.
+/// The message body. It just uses the important variants and their fields.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Body {
     AddOrder {
@@ -40,9 +40,11 @@ pub enum Body {
     SystemEvent {
         event: EventCode,
     },
+    // Enum variant representing a placeholder "Pass" message with no data.
     Pass(()),
 }
 
+// Enum representing different event codes for SystemEvent messages.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EventCode {
     StartOfMessages,
@@ -53,10 +55,12 @@ pub enum EventCode {
     EndOfMessages,
 }
 
+// Parse a SystemEvent message from input bytes.
 #[inline]
 pub fn parse_system_event(input: &[u8]) -> IResult<&[u8], EventCode> {
     let (input, event_char) = nom::character::streaming::anychar(input)?;
 
+    // Match the parsed character to an EventCode variant or return an error if it doesn't match.
     let event = match event_char {
         'O' => EventCode::StartOfMessages,
         'S' => EventCode::StartOfSystemHours,
@@ -65,10 +69,11 @@ pub fn parse_system_event(input: &[u8]) -> IResult<&[u8], EventCode> {
         'E' => EventCode::EndOfSystemHours,
         'C' => EventCode::EndOfMessages,
         _ => {
+            // If the character doesn't match any known EventCode, return a parsing error.
             return Err(nom::Err::Error(nom::error::Error::new(
                 input,
                 nom::error::ErrorKind::Tag,
-            )))
+            )));
         }
     };
 
