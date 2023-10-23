@@ -46,5 +46,5 @@ fn test_lob() {
 
 See Also: 
 - [CppTrader](https://github.com/chronoxor/CppTrader) matching engine implementation
-- A [StackOverflow answer](https://quant.stackexchange.com/questions/3783/what-is-an-efficient-data-structure-to-model-order-book/32482#32482) along with his implementation of an [optimized LOB](https://github.com/charles-cooper/itch-order-book/). I have specifically followed the much of the design idea from his implementation.
+- A [StackOverflow answer](https://quant.stackexchange.com/questions/3783/what-is-an-efficient-data-structure-to-model-order-book/32482#32482) along with his implementation of an [optimized LOB](https://github.com/charles-cooper/itch-order-book/). 
 - This [blog post](https://web.archive.org/web/20110219163448/http://howtohft.wordpress.com/2011/02/15/how-to-build-a-fast-limit-order-book/) gives a good idea for the low-level design of the orderbook.

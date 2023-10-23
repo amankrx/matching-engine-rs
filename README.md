@@ -120,16 +120,6 @@ I have specifically used their `12302019.NASDAQ_ITCH50` data whose compressed fi
 
 Contributions to matching-engine-rs are welcome! If you encounter any issues, have suggestions, or would like to add new features, please feel free to open an issue or submit a pull request. Note that I'm still learning my way around Rust and trading systems, so any feedback is appreciated!
 
-## Credits
-
-These are a few useful resources that helped me and will be useful to understand the LOB as well. Most of them are primarily written in C/C++.
-- [CppTrader](https://github.com/chronoxor/CppTrader) matching engine implementation
-- A [StackOverflow answer](https://quant.stackexchange.com/questions/3783/what-is-an-efficient-data-structure-to-model-order-book/32482#32482) along with his implementation of an [optimized LOB](https://github.com/charles-cooper/itch-order-book/)
-- This [blog post](https://web.archive.org/web/20110219163448/http://howtohft.wordpress.com/2011/02/15/how-to-build-a-fast-limit-order-book/) gives a good idea for the low-level design of the orderbook.
-
-Apart from that, the implementation in the [itchy-rust](https://github.com/adwhit/itchy-rust) library was helpful to create the ITCH Parser. The `nom` library used in the library was pretty old, so I created a parser using the updated libraries and as suitable to my project.
-
-It's important to note that the parsing logic employed within my ITCH parser is optimized for a subset of functions relevant to the Limit Order Book implementation. For broader parsing requirements, it is recommended to utilize the comprehensive capabilities offered by the `itchy-rust` library itself.
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
